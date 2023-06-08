@@ -185,7 +185,7 @@ app.get('/callback', async function(req, res) {
 
     // call spotify web api to get recs
     let paramsR = new URLSearchParams();
-    paramsR.append("limit", 20);
+    paramsR.append("limit", 100);
     paramsR.append("seed_tracks", seedTracksString);
     for (const [key, value] of featureMap) {
       paramsR.append("target_"+key, value);
