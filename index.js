@@ -5,7 +5,7 @@
 // mod.cjs; same as 'import fetch from 'node-fetch''
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 let express = require('express'); // Express web server framework
-// **TODO optional: what do these do
+// **TODO optional: what does cookie parser do 
 let cors = require('cors');
 let querystring = require('querystring');
 let cookieParser = require('cookie-parser');
@@ -15,7 +15,7 @@ let client_id = '62897c9c82b2443888d1e7b2dc9d03e7'; // Your client id
 let client_secret = 'da37bbe76aaf403386c0b1e0c032371c'; // Your secret
 let redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
 
-let globalToken = null;
+//**TODO: use body parser? */
 
 /**
  * Generates a random string containing numbers and letters
@@ -37,11 +37,36 @@ let stateKey = 'spotify_auth_state';
 let app = express();
 
 app.use(express.static(__dirname + '/public'))
-   .use(cors())
+   .use(cors({origin: ['http://localhost:8888', 'http://127.0.0.1:8888', 
+   'http://localhost:3000', 'http://127.0.0.1:3000']}))
    .use(cookieParser());
+
+// Add headers before the routes are defined
+app.use(function (req, res, next) {
+
+  // Website you wish to allow to connect
+  res.setHeader('Access-Control-Allow-Origin', 'http://spotify.com');
+
+  // Request methods you wish to allow
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+  // Request headers you wish to allow
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+  // Set to true if you need the website to include cookies in the requests sent
+  // to the API (e.g. in case you use sessions)
+  res.setHeader('Access-Control-Allow-Credentials', true);
+
+  // Pass to next layer of middleware
+  next();
+});
+
+// for modularity, use express.router
 
 app.get('/login', function(req, res) {
 
+  console.log('Request Type at /login:', req.method)
+  console.log("hello from /login");
   let state = generateRandomString(16);
   res.cookie(stateKey, state);
 
@@ -83,6 +108,7 @@ const fetchAndCatchError = async function(res, url, fetchParamsObj) {
 
 app.get('/callback', async function(req, res) {
 
+  console.log("called get /callback");
   // your application requests refresh and access tokens
   // after checking the state parameter
 
@@ -127,7 +153,8 @@ app.get('/callback', async function(req, res) {
     // should have no error here
     console.log(data);
     let access_token = data.access_token, refresh_token = data.refresh_token;
-    globalToken = access_token;
+    res.cookie('token', access_token, { httpOnly: true })
+            .sendStatus(200); // frontend will retrieve token from cookies
 
     /*
     // use the access token to access the Spotify Web API
@@ -140,13 +167,13 @@ app.get('/callback', async function(req, res) {
     console.log(dataG);*/
 
 
-
+    /*
     // we can also pass the token to the browser to make requests from there
     res.redirect('/#' +
     querystring.stringify({
       access_token: access_token,
       refresh_token: refresh_token
-    }));
+    }));*/
   });
 
 app.get('/recs', async function(req, res) {
@@ -177,12 +204,14 @@ app.get('/recs', async function(req, res) {
       json: true 
   }; */
 
-  let playlist_id = '3BHHjHO7e1rV2yzCs54bnV';
+  let access_token = req.cookies.token;
+  let playlist_id = '50sJGBGTWSDd4E0a6g2xWF';
 
   // use (all) tracks in playlist as seed tracks to get recs
   let urlT = `https://api.spotify.com/v1/playlists/${playlist_id}/tracks`;
+  console.log(access_token);
   let fetchParamsObjT = {method: 'GET',
-                          headers: {'Authorization': 'Bearer ' + globalToken},
+                          headers: {'Authorization': 'Bearer ' + access_token},
                           json: true};
   const dataT = await fetchAndCatchError(res, urlT, fetchParamsObjT);
   let seedTracksString = "";
@@ -208,7 +237,7 @@ app.get('/recs', async function(req, res) {
   paramsF.append("ids", seedTracksString);
   let urlF = `https://api.spotify.com/v1/audio-features?${paramsF.toString()}`;
   let fetchParamsObjF = {method: 'GET',
-                          headers: {'Authorization': 'Bearer ' + globalToken},
+                          headers: {'Authorization': 'Bearer ' + access_token},
                           json: true};
   const dataF = await fetchAndCatchError(res, urlF, fetchParamsObjF);  
   
@@ -265,28 +294,28 @@ app.get('/recs', async function(req, res) {
 
   let urlR = `https://api.spotify.com/v1/recommendations?${paramsR.toString()}`;
   let fetchParamsObjR = {method: 'GET',
-                          headers: {'Authorization': 'Bearer ' + globalToken},
+                          headers: {'Authorization': 'Bearer ' + access_token},
                           json: true};
   const dataR = await fetchAndCatchError(res, urlR, fetchParamsObjR);    
-  
+
+  // for frontend
+  res.json(dataR);
+});
+
+app.get('/add_recs', async function(req, res) {
+  let playlist_id = '50sJGBGTWSDd4E0a6g2xWF';
+
   // add recs to designated playlist
-  let uriArray = [];
-  let posValue = 0;
-  dataR.tracks.forEach((track) => {
-    uriArray.push(`${track.uri}`);
-  });
+  //**TODO do something about repeated tracks 
   let bodyA = {"uris": uriArray, "position": posValue};
   let urlA = `https://api.spotify.com/v1/playlists/${playlist_id}/tracks`;
   let fetchParamsObjA = {method: 'POST',
-                          headers: {'Authorization': 'Bearer ' + globalToken, 
+                          headers: {'Authorization': 'Bearer ' + access_token, 
                                     'Content-Type': 'application/json'},
                           body: JSON.stringify(bodyA),
                           json: true};
   const dataA = await fetchAndCatchError(res, urlA, fetchParamsObjA);
   console.log(dataA);
-
-  // for frontend
-  res.json(dataR);
 });
 
 app.get('/refresh_token', async function(req, res) {
@@ -307,7 +336,6 @@ app.get('/refresh_token', async function(req, res) {
 
   // should have no error here
   let access_token = dataP.access_token;
-  globalToken = access_token;
   res.send({
     'access_token': access_token
   });
