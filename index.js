@@ -39,7 +39,8 @@ let app = express();
 app.use(express.static(__dirname + '/public'))
    .use(cors({origin: ['http://localhost:8888', 'http://127.0.0.1:8888', 
    'http://localhost:3000', 'http://127.0.0.1:3000']}))
-   .use(cookieParser());
+   .use(cookieParser())
+   .use(express.json());
 
 // Add headers before the routes are defined
 app.use(function (req, res, next) {
@@ -88,7 +89,7 @@ const fetchAndCatchError = async function(res, url, fetchParamsObj) {
   try {
     const response = await fetch(url, fetchParamsObj);
     if (response.status != 200) { // an ok response has response.status >= 200 && response.status < 300
-      // this is not always an error response. e.g. add recs results in snapshot-id 
+      // this is not always an error response. add recs results in snapshot-id 
       console.log(`HTTP Error Response: ${response.status} ${response.statusText}`);
     }
     const data = await response.json();
@@ -204,14 +205,12 @@ app.get('/recs', async function(req, res) {
       json: true 
   }; */
 
-  let access_token = req.cookies.token;
-  let playlist_id = '50sJGBGTWSDd4E0a6g2xWF';
+  let playlist_id = '7j5iIX8wkn23t2qB91vf5U';
 
   // use (all) tracks in playlist as seed tracks to get recs
   let urlT = `https://api.spotify.com/v1/playlists/${playlist_id}/tracks`;
-  console.log(access_token);
   let fetchParamsObjT = {method: 'GET',
-                          headers: {'Authorization': 'Bearer ' + access_token},
+                          headers: {'Authorization': 'Bearer ' + req.cookies.token},
                           json: true};
   const dataT = await fetchAndCatchError(res, urlT, fetchParamsObjT);
   let seedTracksString = "";
@@ -237,7 +236,7 @@ app.get('/recs', async function(req, res) {
   paramsF.append("ids", seedTracksString);
   let urlF = `https://api.spotify.com/v1/audio-features?${paramsF.toString()}`;
   let fetchParamsObjF = {method: 'GET',
-                          headers: {'Authorization': 'Bearer ' + access_token},
+                          headers: {'Authorization': 'Bearer ' + req.cookies.token},
                           json: true};
   const dataF = await fetchAndCatchError(res, urlF, fetchParamsObjF);  
   
@@ -254,7 +253,7 @@ app.get('/recs', async function(req, res) {
 
   // call spotify web api to get recs
   let paramsR = new URLSearchParams();
-  paramsR.append("limit", 2);
+  paramsR.append("limit", 10);
   paramsR.append("seed_tracks", seedTracksString);
   for (const [key, value] of featureMap) {
     paramsR.append("target_"+key, value);
@@ -294,7 +293,7 @@ app.get('/recs', async function(req, res) {
 
   let urlR = `https://api.spotify.com/v1/recommendations?${paramsR.toString()}`;
   let fetchParamsObjR = {method: 'GET',
-                          headers: {'Authorization': 'Bearer ' + access_token},
+                          headers: {'Authorization': 'Bearer ' + req.cookies.token},
                           json: true};
   const dataR = await fetchAndCatchError(res, urlR, fetchParamsObjR);    
 
@@ -302,20 +301,20 @@ app.get('/recs', async function(req, res) {
   res.json(dataR);
 });
 
-app.get('/add_recs', async function(req, res) {
-  let playlist_id = '50sJGBGTWSDd4E0a6g2xWF';
+app.post('/add_recs', async function(req, res) {
 
   // add recs to designated playlist
   //**TODO do something about repeated tracks 
-  let bodyA = {"uris": uriArray, "position": posValue};
-  let urlA = `https://api.spotify.com/v1/playlists/${playlist_id}/tracks`;
+  let urlA = `https://api.spotify.com/v1/playlists/${req.body.playlistId}/tracks`;
   let fetchParamsObjA = {method: 'POST',
-                          headers: {'Authorization': 'Bearer ' + access_token, 
+                          headers: {'Authorization': 'Bearer ' + req.cookies.token, 
                                     'Content-Type': 'application/json'},
-                          body: JSON.stringify(bodyA),
+                          body: JSON.stringify({"uris": req.body.uriArray, 
+                                                "position": req.body.posValue}),
                           json: true};
   const dataA = await fetchAndCatchError(res, urlA, fetchParamsObjA);
-  console.log(dataA);
+  res.json(dataA);
+  // TODO: how to confirm done to user 
 });
 
 app.get('/refresh_token', async function(req, res) {

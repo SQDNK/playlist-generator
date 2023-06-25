@@ -62,7 +62,8 @@ const DisplayRecs = function() {
         );
     };
 
-    const addToPlaylist = function() {
+    //*TODO: filter recs by seen
+    const addToPlaylist = async function() {
         let uriArray = [];
         recsCheckbox.forEach((rec) => {
             if (rec.isChecked) {
@@ -71,6 +72,18 @@ const DisplayRecs = function() {
         });
 
         let posValue = 0;
+        let playlistId = '7j5iIX8wkn23t2qB91vf5U';
+        await fetch("/add_recs", {
+            method: "POST",
+            headers: {
+                'Content-type':'application/json'
+            },
+            body: JSON.stringify({posValue: posValue, 
+                                  playlistId: playlistId, 
+                                  uriArray: uriArray})
+            })
+            .then(res => res.json())
+            .then(data => console.log(data));
     }
 
     return (
@@ -78,7 +91,7 @@ const DisplayRecs = function() {
             <button onClick={fetchDataFromExpress}>
                 Get Recs
             </button>
-            {(recsCheckbox != []) && (
+            {(recsCheckbox !== []) && (
                 recsCheckbox.length === 0 // **TODO: when will we have no results? 
                 ? <p>No Results</p>
                 : <ul>
