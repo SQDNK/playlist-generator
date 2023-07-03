@@ -177,34 +177,19 @@ app.get('/callback', async function(req, res) {
     }));*/
   });
 
-app.get('/recs', async function(req, res) {
-  // **TODO: this was in the beginning of app.get /callback so placed it here too (?)
-  /* what does it actually do? 
-  let state = req.query.state || null;
-  let storedState = req.cookies ? req.cookies[stateKey] : null;
+app.post('/get_seed_tracks_features', async function(req, res) {
+  // get features from api
+  let params = new URLSearchParams();
+  console.log("req body " + req.body.seed_tracks);
+  params.append("ids", req.body.seed_tracks);
+  let url = `https://api.spotify.com/v1/audio-features?${params.toString()}`;
+  let fetchParamsObj = {method: 'GET',
+                          headers: {'Authorization': 'Bearer ' + req.cookies.token},
+                          json: true};
+  const data = await fetchAndCatchError(res, url, fetchParamsObj);
+  res.json(data);
 
-  if (state === null || state !== storedState) {
-    res.redirect('/#' +
-      querystring.stringify({
-        error: 'state_mismatch'
-      }));
-  } else {
-    res.clearCookie(stateKey); 
-    // **TODO: why put authoptions here? 
-    /*
-    let authOptions = {
-      url: 'https://accounts.spotify.com/api/token',
-      form: {
-        code: code,
-        redirect_uri: redirect_uri,
-        grant_type: 'authorization_code'
-      },
-      headers: {
-        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-      },
-      json: true 
-  }; */
-
+  /*
   let playlist_id = '7j5iIX8wkn23t2qB91vf5U';
 
   // use (all) tracks in playlist as seed tracks to get recs
@@ -239,9 +224,40 @@ app.get('/recs', async function(req, res) {
                           headers: {'Authorization': 'Bearer ' + req.cookies.token},
                           json: true};
   const dataF = await fetchAndCatchError(res, urlF, fetchParamsObjF);  
+  // send to frontend
+  res.json(dataF);*/
+});
+
+app.get('/get_recs', async function(req, res) {
+  // **TODO: this was in the beginning of app.get /callback so placed it here too (?)
+  /* what does it actually do? 
+  let state = req.query.state || null;
+  let storedState = req.cookies ? req.cookies[stateKey] : null;
+
+  if (state === null || state !== storedState) {
+    res.redirect('/#' +
+      querystring.stringify({
+        error: 'state_mismatch'
+      }));
+  } else {
+    res.clearCookie(stateKey); 
+    // **TODO: why put authoptions here? 
+    /*
+    let authOptions = {
+      url: 'https://accounts.spotify.com/api/token',
+      form: {
+        code: code,
+        redirect_uri: redirect_uri,
+        grant_type: 'authorization_code'
+      },
+      headers: {
+        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+      },
+      json: true 
+  }; */
   
-  let featureMap = new Map([["acousticness", 0], ["danceability",0], 
-    ["energy", 0], ["loudness", 0],["speechiness", 0], ["tempo", 0], ["valence", 0]]); 
+  let featureMap = new Map([["danceability",0], 
+    ["energy", 0], ["valence", 0]]); 
   const numOfTracks = dataF.audio_features.length;
   for (const track of dataF.audio_features) {
     for (const [key, value] of featureMap) {
@@ -253,7 +269,7 @@ app.get('/recs', async function(req, res) {
 
   // call spotify web api to get recs
   let paramsR = new URLSearchParams();
-  paramsR.append("limit", 10);
+  paramsR.append("limit", 50);
   paramsR.append("seed_tracks", seedTracksString);
   for (const [key, value] of featureMap) {
     paramsR.append("target_"+key, value);
@@ -264,8 +280,8 @@ app.get('/recs', async function(req, res) {
   /*
   choose features that can be input to rec api and output from track feature api
   also lets you use more than 5 tracks
-  url for full audio analysis possible 
-  min, max, target acousticness (maybe just target?)
+  min, max of each feature? maybe just target? 
+  acousticness
   danceability
   energy
   instrumentalness (excluded for now)
@@ -316,6 +332,20 @@ app.post('/add_recs', async function(req, res) {
   res.json(dataA);
   // TODO: how to confirm done to user 
 });
+
+app.post('/refine', async function(req, res) {
+  // look at full details of tracks. 
+  // refine algorithm: choose most similar features and get recs based on that?
+
+  let ids = req.body.ids;
+  let url = `https://api.spotify.com/v1/audio-features?${ids}`;
+  let fetchParamsObj = {method: 'GET',
+                          headers: {'Authorization': 'Bearer ' + req.cookies.token},
+                          json: true};
+  const data = await fetchAndCatchError(res, url, fetchParamsObj);
+  res.json(data);
+
+})
 
 app.get('/refresh_token', async function(req, res) {
 

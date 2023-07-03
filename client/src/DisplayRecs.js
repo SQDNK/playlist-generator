@@ -17,9 +17,14 @@ export const Checkbox = ({ isChecked, label, checkHandler, index }) => {
 // checkboxes for multiple elements: https://dev.to/collegewap/how-to-work-with-checkboxes-in-react-44bc
 const DisplayRecs = function() { 
     const [recsCheckbox, setRecsCheckbox] = useState([]);
+    // if we want more recs, can't tell spotify api to ignore some tracks.
+    // only way to do it is to increase rec limit. 
+    const [seen, setSeen] = useState([]);
 
-    const fetchDataFromExpress = async function() {
-        await fetch("/recs")
+    const fetchFromExpress = async function() {
+        await fetch("/get_recs", {
+            method: "GET" 
+            })
             .then(res => res.json())
             .then(data => {
                 //setTracksData(data);
@@ -27,7 +32,7 @@ const DisplayRecs = function() {
                 data.tracks.forEach((track) => {
                     let artistsString = "";
                     track.artists.forEach((artist) => {
-                        artistsString += artist.name;
+                        artistsString += artist.name + ", ";
                     });
                     recsCheckboxArray.push(
                         {id: track.id, 
@@ -40,6 +45,23 @@ const DisplayRecs = function() {
                 setRecsCheckbox(recsCheckboxArray);
             });
     };
+
+    /*
+    // display seed features
+    const fetchFeaturesFromExpress = async function() {
+        await fetch("/get_seed_features", {
+            method: "POST",
+            })
+            .then(res => res.json())
+            .then(data => {
+                //setTracksData(data);
+                let featuresArray = [];
+                data.audio_features.forEach((feature) => {
+                    featuresArray.push(feature)
+                });
+                setFeatures(featuresArray);
+            });
+    };*/ 
 /*
     useEffect(() => {
         if (tracksData != null) {
@@ -88,7 +110,7 @@ const DisplayRecs = function() {
 
     return (
         <>
-            <button onClick={fetchDataFromExpress}>
+            <button onClick={fetchFromExpress}>
                 Get Recs
             </button>
             {(recsCheckbox !== []) && (
@@ -121,7 +143,6 @@ const DisplayRecs = function() {
                     </button>
                   </ul>
             )}
-
         </>
     );
 };

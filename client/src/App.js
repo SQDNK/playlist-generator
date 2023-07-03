@@ -1,6 +1,8 @@
 import './App.css';
-import DisplayRecs from './DisplayRecs';
 import GetAuth from './GetAuth';
+import UseUserInput from './UseUserInput';
+import DisplayRecs from './DisplayRecs';
+import RefineRecs from './RefineRecs';
 
 function App() {
 
@@ -8,7 +10,9 @@ function App() {
   return (
     <div className="App">
       <GetAuth />
+      <UseUserInput />
       <DisplayRecs />
+      <RefineRecs />
     </div>
   );
 }
