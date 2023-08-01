@@ -107,6 +107,8 @@ const fetchAndCatchError = async function(res, url, fetchParamsObj) {
   }
 }
 
+// **TODO: put token request as its own app.get 
+
 app.get('/callback', async function(req, res) {
 
   console.log("called get /callback");

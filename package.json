@@ -4,17 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "nodemon index",
+    "client": "yarn --cwd client-2 start"
   },
   "keywords": [],
   "author": "holly liu",
   "license": "ISC",
   "dependencies": {
+    "concurrently": "^8.2.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "node-fetch": "^3.3.1",
+    "nodemon": "^3.0.1",
     "tar": "^6.1.15"
   }
-
 }
