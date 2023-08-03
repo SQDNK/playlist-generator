@@ -5,10 +5,13 @@
 // mod.cjs; same as 'import fetch from 'node-fetch''
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 let express = require('express'); // Express web server framework
+let app = express();
 // **TODO optional: what does cookie parser do 
 let cors = require('cors');
 let querystring = require('querystring');
 let cookieParser = require('cookie-parser');
+let multer = require('multer');
+let upload = multer();
 const port = 8888 // both express and react app default to 3000 
 
 let client_id = '62897c9c82b2443888d1e7b2dc9d03e7'; // Your client id
@@ -34,35 +37,61 @@ let generateRandomString = function(length) {
 
 let stateKey = 'spotify_auth_state';
 
-let app = express();
-
 app.use(express.static(__dirname + '/public'))
-   .use(cors({origin: ['http://localhost:8888', 'http://127.0.0.1:8888', 
-   'http://localhost:3000', 'http://127.0.0.1:3000']}))
+   .use(cors())
    .use(cookieParser())
-   .use(express.json());
+   .use(express.json()) // for parsing application/json
+   .use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 // Add headers before the routes are defined
-app.use(function (req, res, next) {
 
-  // Website you wish to allow to connect
-  res.setHeader('Access-Control-Allow-Origin', 'http://spotify.com');
-
-  // Request methods you wish to allow
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-  // Request headers you wish to allow
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-  // Set to true if you need the website to include cookies in the requests sent
-  // to the API (e.g. in case you use sessions)
-  res.setHeader('Access-Control-Allow-Credentials', true);
-
-  // Pass to next layer of middleware
-  next();
-});
 
 // for modularity, use express.router
+
+// maybe export 
+const fetchAndCatchError = async function(res, url, fetchParamsObj) {
+  let response;
+  try {
+    response = await fetch(url, fetchParamsObj);
+    if (response.status != 200) { // an ok response has response.status >= 200 && response.status < 300
+      // this is not always an error response. add recs results in snapshot-id 
+      console.log(`HTTP Error Response: ${response.status} ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error(error);
+
+    const errorBody = await error.response.text();
+    console.error(`Error body: ${errorBody}`);
+
+    res.redirect('/#' +
+    querystring.stringify({
+      error: 'invalid_token'
+    }));
+  }
+  return await response.json();
+}
+
+app.get('/get_token', async function(req, res) {
+
+  let formParams = new URLSearchParams();
+  formParams.append('grant_type', "client_credentials");
+  formParams.append('client_id', client_id);
+  formParams.append('client_secret', client_secret);
+  
+  let url = 'https://accounts.spotify.com/api/token';
+  let fetchParamsObj = {method: 'POST',
+                        body: formParams,
+                        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                        json: true};
+
+  console.log("in express, before fetching token");
+  const data = await fetchAndCatchError(res, url, fetchParamsObj);
+  // should have no error at this point
+  console.log("in express, after fetching token: " + data.access_token);
+  res.cookie('token', data.access_token, { httpOnly: true })
+          .sendStatus(200); // frontend will retrieve token from cookies
+  //res.json(data);
+});
 
 app.get('/login', function(req, res) {
 
@@ -83,31 +112,6 @@ app.get('/login', function(req, res) {
       state: state
     }));
 });
-
-// maybe export 
-const fetchAndCatchError = async function(res, url, fetchParamsObj) {
-  try {
-    const response = await fetch(url, fetchParamsObj);
-    if (response.status != 200) { // an ok response has response.status >= 200 && response.status < 300
-      // this is not always an error response. add recs results in snapshot-id 
-      console.log(`HTTP Error Response: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error(error);
-
-    const errorBody = await error.response.text();
-    console.error(`Error body: ${errorBody}`);
-
-    res.redirect('/#' +
-    querystring.stringify({
-      error: 'invalid_token'
-    }));
-  }
-}
-
-// **TODO: put token request as its own app.get 
 
 app.get('/callback', async function(req, res) {
 
@@ -153,7 +157,7 @@ app.get('/callback', async function(req, res) {
                           headers: {'Authorization': 'Basic ' + (Buffer.from(client_id + ':' + client_secret).toString('base64'))},
                           json: true};
     const data = await fetchAndCatchError(res, url, fetchParamsObj);
-    // should have no error here
+    // should have no error at this point
     console.log(data);
     let access_token = data.access_token, refresh_token = data.refresh_token;
     res.cookie('token', access_token, { httpOnly: true })
@@ -179,17 +183,18 @@ app.get('/callback', async function(req, res) {
     }));*/
   });
 
-app.post('/get_seed_tracks_features', async function(req, res) {
+app.post('/get_features', upload.none(), async function(req, res) {
   // get features from api
   let params = new URLSearchParams();
-  console.log("req body " + req.body.seed_tracks);
   params.append("ids", req.body.seed_tracks);
   let url = `https://api.spotify.com/v1/audio-features?${params.toString()}`;
+  console.log(url);
   let fetchParamsObj = {method: 'GET',
                           headers: {'Authorization': 'Bearer ' + req.cookies.token},
                           json: true};
-  const data = await fetchAndCatchError(res, url, fetchParamsObj);
-  res.json(data);
+  const data_features = await fetchAndCatchError(res, url, fetchParamsObj);
+  //console.log(data);
+  res.jsonp(data_features);
 
   /*
   let playlist_id = '7j5iIX8wkn23t2qB91vf5U';

@@ -6,12 +6,14 @@ const UseUserInput = function() {
     const [seedGenres, setSeedGenres] = useState("");
     const [seedArtists, setSeedArtists] = useState("");
 
-    const [features, setFeatures] = useState(null);
+    const [features, setFeatures] = useState({});
 
     // https://react.dev/reference/react-dom/components/input
     const handleFormSubmit = async function(e) {
         // Prevent the browser from reloading the page
         e.preventDefault();
+
+        // get token? 
 
         // Read the form data
         const form = e.target;
@@ -21,34 +23,29 @@ const UseUserInput = function() {
         // You can pass formData as a fetch body directly:
         // Or you can work with it as a plain object:
         const formJson = Object.fromEntries(formData.entries());
-        console.log("form object? " + formJson.seed_tracks);
+        console.log("in client, form input is " + formData.get("seed_tracks"));
 
-        await fetch("/get_seed_tracks_features", { 
+        // to get data, return res.json(). res => res.json() works.
+        // res => {return res.json()} works. res => {res.json()} does not work. 
+        await fetch("/get_features", { 
             method: form.method, 
-            body: JSON.stringify(formJson)
+            body: formData
             })
             .then(res => {
-                res.json();
+                return res.json();
                 //setFeatures(res.data);
             })
             .then(data => {
-                console.log("data " + data);
-                let featuresArray = [];
-                data.audio_features.forEach((track) => {
-                    track.forEach((feature) => {
-                        featuresArray.push(feature);
-                    });
-                });
-                //setFeatures(featuresArray);
-                console.log(featuresArray);
+                setFeatures(data);
+            })
+            .catch(error => {
+                console.log(error.message);
             });
-        ;
-
     };
 
     return (
         <>
-            <form method="POST" onSubmit={handleFormSubmit}>
+            <form method="POST" encType="multipart/form-data" onSubmit={handleFormSubmit}>
                 <label>
                     Track(s): 
                     {/*
@@ -56,7 +53,10 @@ const UseUserInput = function() {
                     **TODO: make input box bigger 
                     
                     input is re-rendered on every edit by default. 
-                        not sure its possible to change this. */ }
+                        not sure its possible to change this. 
+                        
+                    temp: 2gNjmvuQiEd2z9SqyYi8HH,78MI7mu1LV1k4IA2HzKmHe
+                    */ }
                     <input name="seed_tracks"
                            value={seedTracks} 
                            onChange={e => setSeedTracks(e.target.value)} /> 
