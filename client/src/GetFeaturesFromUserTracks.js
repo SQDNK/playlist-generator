@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { replace } from './featuresSlice';
+import AnalyzeFeatures from './AnalyzeFeatures';
+// **TODO: good design to import analyze features? or stick it here? 
 
-const UseUserInput = function() {
+const GetFeaturesFromUserTracks = function() {
     // params for calling api specifically get_recs  
     const [seedTracks, setSeedTracks] = useState("");
     const [seedGenres, setSeedGenres] = useState("");
     const [seedArtists, setSeedArtists] = useState("");
+    const [showFeatures, setShowFeatures] = useState(false);
 
-    const [features, setFeatures] = useState({});
+    //const [features, setFeatures] = useState({});
+
+    const features = useSelector((state) => state.features.value);
+    const dispatch = useDispatch();
 
     // https://react.dev/reference/react-dom/components/input
     const handleFormSubmit = async function(e) {
@@ -36,11 +44,14 @@ const UseUserInput = function() {
                 //setFeatures(res.data);
             })
             .then(data => {
-                setFeatures(data);
+                dispatch(change(data));
+
             })
             .catch(error => {
                 console.log(error.message);
             });
+
+        setShowFeatures(true);
     };
 
     return (
@@ -82,18 +93,14 @@ const UseUserInput = function() {
                 </button>
             </form>
 
-            {(features !== [])
+            {(showFeatures)
                 ? <p></p>
                 : <div>
-                    {features.map((feature) => (
-                        <div key={`${feature}`}>
-                            hello
-                        </div>
-                    ))}
+                    <AnalyzeFeatures />
                 </div>
             }
         </>
     );
 };
 
-export default UseUserInput;
+export default GetFeaturesFromUserTracks;

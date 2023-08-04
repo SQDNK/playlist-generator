@@ -1,16 +1,16 @@
 import logo from './logo.svg';
 import './App.css';
 import GetAuth from './GetAuth';
-import UseUserInput from './UseUserInput';
 import DisplayRecs from './DisplayRecs';
 import RefineRecs from './RefineRecs';
+import GetFeaturesFromUserTracks from './GetFeaturesFromUserTracks';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
         <GetAuth />
-        <UseUserInput />
+        <GetFeaturesFromUserTracks />
         <DisplayRecs />
         <RefineRecs />
       </header>
