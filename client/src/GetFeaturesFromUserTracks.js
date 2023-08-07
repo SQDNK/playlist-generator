@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { replace } from './featuresSlice';
+import { replace } from './redux/featuresSlice';
 import AnalyzeFeatures from './AnalyzeFeatures';
 // **TODO: good design to import analyze features? or stick it here? 
 
@@ -44,14 +44,12 @@ const GetFeaturesFromUserTracks = function() {
                 //setFeatures(res.data);
             })
             .then(data => {
-                dispatch(change(data));
-
+                dispatch(replace(data));
+                setShowFeatures(true);
             })
             .catch(error => {
                 console.log(error.message);
             });
-
-        setShowFeatures(true);
     };
 
     return (
@@ -93,11 +91,8 @@ const GetFeaturesFromUserTracks = function() {
                 </button>
             </form>
 
-            {(showFeatures)
-                ? <p></p>
-                : <div>
-                    <AnalyzeFeatures />
-                </div>
+            {(showFeatures) &&
+                <AnalyzeFeatures />
             }
         </>
     );
