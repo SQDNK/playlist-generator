@@ -51,20 +51,6 @@ const AnalyzeFeatures = function() {
     all diffs at once will tell you if the diffs are dependent. 
     */
 
-    // correlation matrix. source: https://d3-graph-gallery.com/graph/correlogram_basic.html 
-    // Graph dimension
-    const margin = {top: 20, right: 20, bottom: 20, left: 20},
-    width = 430 - margin.left - margin.right,
-    height = 430 - margin.top - margin.bottom
-
-    // Create the svg area
-    const svg = d3.select("#correlogram")
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
-
     // make array for csv 
     let rows = [];
     let fields = ["ad", "ae", "av", "de", "dv", "ev"];
@@ -213,6 +199,12 @@ const AnalyzeFeatures = function() {
             .style("opacity", 0.8)
     });*/
 
+    // correlation matrix. source: https://d3-graph-gallery.com/graph/correlogram_basic.html 
+    // Graph dimension
+    const margin = {top: 20, right: 20, bottom: 20, left: 20},
+    width = 430 - margin.left - margin.right,
+    height = 430 - margin.top - margin.bottom
+
     const data = [];
     rows.forEach(function(d) {
         let x = d[0];
@@ -228,6 +220,17 @@ const AnalyzeFeatures = function() {
             });
         }
     });
+
+    // Create the svg area
+    // remove any initial data
+    d3.select("#correlogram svg").remove()
+
+    const svg = d3.select("#correlogram")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
 
             // List of all variables and number of them
     const domain = Array.from(new Set(data.map(function(d) { return d.x })))
@@ -333,8 +336,10 @@ const AnalyzeFeatures = function() {
     });
 
     return (
-        <div id="correlogram">
-        </div>
+        <>
+            <div id="correlogram" className="bg-pink-200">
+            </div>
+        </>
     );
 };
 

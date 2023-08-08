@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { replace } from './redux/featuresSlice';
 import AnalyzeFeatures from './AnalyzeFeatures';
+import { setFeaturesState } from './redux/globalStatesSlice';
 // **TODO: good design to import analyze features? or stick it here? 
 
 const GetFeaturesFromUserTracks = function() {
@@ -12,7 +13,6 @@ const GetFeaturesFromUserTracks = function() {
 
     //const [features, setFeatures] = useState({});
 
-    const features = useSelector((state) => state.features.value);
     const dispatch = useDispatch();
 
     // https://react.dev/reference/react-dom/components/input
@@ -30,7 +30,7 @@ const GetFeaturesFromUserTracks = function() {
         // You can pass formData as a fetch body directly:
         // Or you can work with it as a plain object:
         const formJson = Object.fromEntries(formData.entries());
-        console.log("in client, form input is " + formData.get("seed_tracks"));
+        //console.log("in client, form input is " + formData.get("seed_tracks"));
 
         // to get data, return res.json(). res => res.json() works.
         // res => {return res.json()} works. res => {res.json()} does not work. 
@@ -48,13 +48,15 @@ const GetFeaturesFromUserTracks = function() {
             .catch(error => {
                 console.log(error.message);
             });
+
+        dispatch(setFeaturesState(true))
     };
 
     return (
-        <>
+        <div className="">
             <form method="POST" encType="multipart/form-data" onSubmit={handleFormSubmit}
-                  class="rounded-lg px-6 py-8 ring-1 ring-slate-900/5 flex flex-row">
-                <label class=" text-slate-900 dark:text-white 
+                  className="rounded-lg px-6 py-8 flex flex-row">
+                <label className=" text-slate-900 dark:text-white 
                               basis-1/4">
                     Track(s): 
                     {/*
@@ -70,13 +72,13 @@ const GetFeaturesFromUserTracks = function() {
                            value={seedTracks} 
                            onChange={e => setSeedTracks(e.target.value)} /> 
                 </label>
-                <label class="basis-1/4">
+                <label className="basis-1/4">
                     Artists(s): 
                     <input name="seed_artists"
                            value={seedArtists} 
                            onChange={e => setSeedArtists(e.target.value)} /> 
                 </label>
-                <label class="basis-1/4">
+                <label className="basis-1/4">
                     Genres(s): 
                     {/*
                     
@@ -86,15 +88,11 @@ const GetFeaturesFromUserTracks = function() {
                            value={seedGenres} 
                            onChange={e => setSeedGenres(e.target.value)} /> 
                 </label>
-                <button class="bg-pink-200 hover:bg-pink-300">
+                <button className="bg-pink-200 hover:bg-pink-300">
                     Submit
                 </button>
             </form>
-
-            {(features != null) &&
-                <AnalyzeFeatures />
-            }
-        </>
+        </div>
     );
 };
 
