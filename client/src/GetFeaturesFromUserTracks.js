@@ -9,7 +9,6 @@ const GetFeaturesFromUserTracks = function() {
     const [seedTracks, setSeedTracks] = useState("");
     const [seedGenres, setSeedGenres] = useState("");
     const [seedArtists, setSeedArtists] = useState("");
-    const [showFeatures, setShowFeatures] = useState(false);
 
     //const [features, setFeatures] = useState({});
 
@@ -45,7 +44,6 @@ const GetFeaturesFromUserTracks = function() {
             })
             .then(data => {
                 dispatch(replace(data));
-                setShowFeatures(true);
             })
             .catch(error => {
                 console.log(error.message);
@@ -91,7 +89,7 @@ const GetFeaturesFromUserTracks = function() {
                 </button>
             </form>
 
-            {(showFeatures) &&
+            {(features != null) &&
                 <AnalyzeFeatures />
             }
         </>
