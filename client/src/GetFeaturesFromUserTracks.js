@@ -52,8 +52,10 @@ const GetFeaturesFromUserTracks = function() {
 
     return (
         <>
-            <form method="POST" encType="multipart/form-data" onSubmit={handleFormSubmit}>
-                <label>
+            <form method="POST" encType="multipart/form-data" onSubmit={handleFormSubmit}
+                  class="rounded-lg px-6 py-8 ring-1 ring-slate-900/5 flex flex-row">
+                <label class=" text-slate-900 dark:text-white 
+                              basis-1/4">
                     Track(s): 
                     {/*
                     
@@ -68,13 +70,13 @@ const GetFeaturesFromUserTracks = function() {
                            value={seedTracks} 
                            onChange={e => setSeedTracks(e.target.value)} /> 
                 </label>
-                <label>
+                <label class="basis-1/4">
                     Artists(s): 
                     <input name="seed_artists"
                            value={seedArtists} 
                            onChange={e => setSeedArtists(e.target.value)} /> 
                 </label>
-                <label>
+                <label class="basis-1/4">
                     Genres(s): 
                     {/*
                     
@@ -84,7 +86,7 @@ const GetFeaturesFromUserTracks = function() {
                            value={seedGenres} 
                            onChange={e => setSeedGenres(e.target.value)} /> 
                 </label>
-                <button>
+                <button class="bg-pink-200 hover:bg-pink-300">
                     Submit
                 </button>
             </form>

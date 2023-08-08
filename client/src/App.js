@@ -7,8 +7,8 @@ import GetFeaturesFromUserTracks from './GetFeaturesFromUserTracks';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
+    <div class="bg-teal-200 dark:bg-slate-800 ">
+      <header class="inline-flex items-center justify-center p-2">
         <GetAuth />
         <GetFeaturesFromUserTracks />
         <DisplayRecs />
