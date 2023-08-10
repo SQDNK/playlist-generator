@@ -4,7 +4,9 @@ const colors = require('tailwindcss/colors');
 
 module.exports = {
   content: ["./src/**/*.{html,js}"],
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+  ],
   darkMode: 'class',
   theme: {
     screens: {
@@ -13,12 +15,14 @@ module.exports = {
       lg: '976px',
       xl: '1440px',
     },
-    fontFamily: {
-      sans: ['Graphik', 'sans-serif'],
-      serif: ['Merriweather', 'serif'],
-    },
     extend: {
+      fontFamily: {
+        sans: ['"Raleway"', 'sans-serif'],
+        serif: ['Merriweather', 'serif'],
+      },
       colors: {
+        lime: colors.lime,
+        slate: colors.slate,
         emerald: colors.emerald,
         'softteal': '#91E1BE',
         teal: colors.teal,

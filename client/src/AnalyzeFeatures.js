@@ -337,7 +337,7 @@ const AnalyzeFeatures = function() {
 
     return (
         <>
-            <div id="correlogram" className="bg-pink-200">
+            <div id="correlogram" className="bg-pink-500">
             </div>
         </>
     );

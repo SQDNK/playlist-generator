@@ -6,10 +6,13 @@ import { setFeaturesState } from './redux/globalStatesSlice';
 // **TODO: good design to import analyze features? or stick it here? 
 
 const GetFeaturesFromUserTracks = function() {
-    // params for calling api specifically get_recs  
+    // params for calling get_recs  
     const [seedTracks, setSeedTracks] = useState("");
     const [seedGenres, setSeedGenres] = useState("");
     const [seedArtists, setSeedArtists] = useState("");
+    
+    const [playlist, setPlaylist] = useState("");
+    const [offset, setOffset] = useState("");
 
     //const [features, setFeatures] = useState({});
 
@@ -34,10 +37,33 @@ const GetFeaturesFromUserTracks = function() {
 
         // to get data, return res.json(). res => res.json() works.
         // res => {return res.json()} works. res => {res.json()} does not work. 
+
+        // user wants to use tracks in playlist
+        if (playlist != "") {
+            await fetch("/get_ids_from_playlist", {
+                method: form.method,
+                body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    // append to formData and continue fetching below
+                    // **TODO: will appending field "ids" be unsafe
+                    // **TODO: currently ignores any seed_track inputs
+                    let idsString = "";
+                    data.items.forEach((item) => {
+                        idsString += item.track.id + ",";
+                    });
+                    // remove last comma
+                    idsString = idsString.substring(0,idsString.length-1);
+                    formData.set("seed_tracks", idsString);
+                })
+                .catch(error => {
+                    console.log(error.message);
+                });
+        }
+
         await fetch("/get_features", { 
             method: form.method, 
-            body: formData
-            })
+            body: formData})
             .then(res => {
                 return res.json();
                 //setFeatures(res.data);
@@ -55,15 +81,14 @@ const GetFeaturesFromUserTracks = function() {
     return (
         <div className="">
             <form method="POST" encType="multipart/form-data" onSubmit={handleFormSubmit}
-                  className="rounded-lg px-6 py-8 flex flex-row">
-                <label className=" text-slate-900 dark:text-white 
-                              basis-1/4">
+                  className="rounded-lg flex flex-row flex-wrap px-6 py-6 gap-4">
+                <label className="bg-emerald-400 p-2 min-w-fit min-h-fit rounded-lg text-slate-900 dark:text-white basis-1/4 ">
                     Track(s): 
                     {/*
                     
                     **TODO: make input box bigger 
                     
-                    input is re-rendered on every edit by default. 
+                    input is re-rendered on every edit by defau76 h-16 
                         not sure its possible to change this. 
                         
                     temp: 2gNjmvuQiEd2z9SqyYi8HH,78MI7mu1LV1k4IA2HzKmHe
@@ -72,13 +97,13 @@ const GetFeaturesFromUserTracks = function() {
                            value={seedTracks} 
                            onChange={e => setSeedTracks(e.target.value)} /> 
                 </label>
-                <label className="basis-1/4">
+                <label className="bg-emerald-400 p-2 min-w-fit min-h-fit rounded-lg text-slate-900 dark:text-white basis-1/4">
                     Artists(s): 
                     <input name="seed_artists"
                            value={seedArtists} 
                            onChange={e => setSeedArtists(e.target.value)} /> 
                 </label>
-                <label className="basis-1/4">
+                <label className="bg-emerald-400 p-2 min-w-fit min-h-fit rounded-lg text-slate-900 dark:text-white basis-1/4">
                     Genres(s): 
                     {/*
                     
@@ -88,7 +113,18 @@ const GetFeaturesFromUserTracks = function() {
                            value={seedGenres} 
                            onChange={e => setSeedGenres(e.target.value)} /> 
                 </label>
-                <button className="bg-pink-200 hover:bg-pink-300">
+                <label className="bg-emerald-400 p-2 min-w-fit min-h-fit rounded-lg text-slate-900 dark:text-white basis-1/4">
+                    Use tracks in playlist: 
+                    Playlist ID:
+                    <input name="playlist_id"
+                           value={playlist} 
+                           onChange={e => setPlaylist(e.target.value)} /> 
+                    Offset (index of first track):
+                    <input name="offset"
+                           value={offset}
+                           onChange={e => setOffset(e.target.value)} />
+                </label>
+                <button className="bg-pink-200 hover:bg-pink-300 rounded-lg p-2">
                     Submit
                 </button>
             </form>

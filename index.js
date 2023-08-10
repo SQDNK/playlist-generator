@@ -183,15 +183,29 @@ app.get('/callback', async function(req, res) {
     }));*/
   });
 
+app.post('/get_ids_from_playlist', upload.none(), async function(req, res) {
+  let paramsO = new URLSearchParams();
+  if (req.body.offset === "") {
+    paramsO.append("offset", 0);
+  } else {
+    paramsO.append("offset", req.body.offset);
+  }
+  let url = `https://api.spotify.com/v1/playlists/${req.body.playlist_id}/tracks?${paramsO.toString()}&limit=50`;
+  let fetchParamsObj = {method: 'GET',
+                        headers: {'Authorization': 'Bearer ' + req.cookies.token},
+                        json: true};
+  const track_ids = await fetchAndCatchError(res, url, fetchParamsObj);
+  res.jsonp(track_ids);
+});
+
 app.post('/get_features', upload.none(), async function(req, res) {
   // get features from api
   let params = new URLSearchParams();
   params.append("ids", req.body.seed_tracks);
   let url = `https://api.spotify.com/v1/audio-features?${params.toString()}`;
-  console.log(url);
   let fetchParamsObj = {method: 'GET',
-                          headers: {'Authorization': 'Bearer ' + req.cookies.token},
-                          json: true};
+                        headers: {'Authorization': 'Bearer ' + req.cookies.token},
+                        json: true};
   const data_features = await fetchAndCatchError(res, url, fetchParamsObj);
   //console.log(data);
   res.jsonp(data_features);

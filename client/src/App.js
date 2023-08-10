@@ -7,18 +7,19 @@ import DefaultBody from './DefaultBody';
 
 function App() {
   return (
-    <>
-      <div className="bg-teal-200 dark:bg-slate-800 ">
-        <header className="inline-flex items-center justify-center p-2">
-          <GetAuth />
-          <GetFeaturesFromUserTracks />
-          <RefineRecs />
-        </header>
-      </div>
+    <div className="bg-teal-200 dark:bg-slate-800 mx-12 font-sans">
+      <header className="">
+        Playlist Generator
+      </header>
+      <header className="bg-teal-200">
+        <GetAuth />
+        <GetFeaturesFromUserTracks />
+        <RefineRecs />
+      </header>
       <div className="bg-teal-100"> 
         <DefaultBody />
       </div>
-    </>
+    </div>
   );
 }
 
