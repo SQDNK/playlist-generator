@@ -12,7 +12,7 @@ const makeCorrelogram = function(...args) {
 };
 
 // input: data = [{"acousticness": }, ..., {"ad": }, ...]
-const findStats = function(data) {
+const findStatsRecs = function(data, allDiffsArray) {
     // make boxplots
     // set the dimensions and margins of the graph
     let margin = {top: 10, right: 30, bottom: 30, left: 40},
@@ -33,16 +33,36 @@ const findStats = function(data) {
 
     // Compute quartiles, median, inter quantile range min and max --> these info are then used to draw the box.
     // nest function allows to group the calculation per level of a factor
-    let sumstat = d3.rollup(function(d) {
-        let q1 = d3.quantile(d.map(function(g) { return g.Sepal_Length;}).sort(d3.ascending),.25)
-        let median = d3.quantile(d.map(function(g) { return g.Sepal_Length;}).sort(d3.ascending),.5)
-        let q3 = d3.quantile(d.map(function(g) { return g.Sepal_Length;}).sort(d3.ascending),.75)
+    // https://d3-graph-gallery.com/graph/boxplot_horizontal.html and migration:
+    //https://observablehq.com/@d3/d3v6-migration-guide#group
+    let diffsStatsArray = [];
+    for (let i = 0; i < allDiffsArray.length; i++) {
+        // **TODO: something with d.key instead of using allDiffsArray
+        let q1 = ss.quantile(ss.minSorted(Object.values(allDiffsArray[i])),.25)
+        let median = ss.quantile(ss.minSorted(Object.values(allDiffsArray[i])),.5)
+        let q3 = ss.quantile(ss.minSorted(Object.values(allDiffsArray[i])),.75)
         let interQuantileRange = q3 - q1
         let min = q1 - 1.5 * interQuantileRange
         let max = q3 + 1.5 * interQuantileRange
-        return({q1: q1, median: median, q3: q3, interQuantileRange: interQuantileRange, min: min, max: max})
-    }) 
-    .entries(data)
+        let arrayTemp = [q1, median, q3, interQuantileRange, min, max];
+        let keyTemp = Object.keys(allDiffsArray[i])
+        diffsStatsArray.push(arrayTemp)
+    };
+    console.log("diffsStatsArray ", diffsStatsArray);
+
+    /*
+    let sumstat = d3.rollup(data, 
+        v => {
+            
+            let q1 = d3.quantile(v.map(function(g) { return g.Sepal_Length;}).sort(d3.ascending),.25)
+            let median = d3.quantile(v.map(function(g) { return g.Sepal_Length;}).sort(d3.ascending),.5)
+            let q3 = d3.quantile(v.map(function(g) { return g.Sepal_Length;}).sort(d3.ascending),.75)
+            let interQuantileRange = q3 - q1
+            let min = q1 - 1.5 * interQuantileRange
+            let max = q3 + 1.5 * interQuantileRange
+            return({q1: q1, median: median, q3: q3, interQuantileRange: interQuantileRange, min: min, max: max})
+        }, d => d.key); 
+    console.log("sumstat ", sumstat);
 
     // Show the X scale
     let x = d3.scaleBand()
@@ -111,7 +131,7 @@ const findStats = function(data) {
     .attr("cy", function(d){return(y(d.Sepal_Length))})
     .attr("r", 4)
     .style("fill", "white")
-    .attr("stroke", "black")
+    .attr("stroke", "black")*/
 };
 
 const AnalyzeFeatures = function() {
@@ -156,7 +176,8 @@ const AnalyzeFeatures = function() {
         }*/
         featuresData.push(obj);
     })
-    allDiffsArray.push(adArray, aeArray, avArray, deArray, dvArray, evArray);
+    allDiffsArray.push({"ad": adArray}, {"ae": aeArray}, {"av": avArray}, 
+                        {"de": deArray}, {"dv": dvArray}, {"ev": evArray});
 
     /* to find if any tracks have similar differences, check if any mean difference
     // is significant (?). use hypothesized mean of 0. 
@@ -332,7 +353,8 @@ const AnalyzeFeatures = function() {
           .attr('y', aS(d))
     });
 
-    findStats(featuresData);
+    
+    findStatsRecs(featuresData, allDiffsArray);
 
     return (
         <>

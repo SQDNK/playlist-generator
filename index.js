@@ -84,10 +84,8 @@ app.get('/get_token', async function(req, res) {
                         headers: {"Content-Type": "application/x-www-form-urlencoded"},
                         json: true};
 
-  console.log("in express, before fetching token");
   const data = await fetchAndCatchError(res, url, fetchParamsObj);
   // should have no error at this point
-  console.log("in express, after fetching token: " + data.access_token);
   res.cookie('token', data.access_token, { httpOnly: true })
           .sendStatus(200); // frontend will retrieve token from cookies
   //res.json(data);
