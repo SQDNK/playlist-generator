@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { replaceStatTestResults } from './redux/statTestsResultsSlice';
+import { setStatsState } from './redux/globalStatesSlice';
 
 // [Note] sends results to redux 
 
@@ -15,7 +16,7 @@ const makeCorrelogram = function(...args) {
 };
 
 // input: data = [{"acousticness": }, ..., {"ad": }, ...]
-const findStatsRecs = function(data, allDiffsArray) {
+const findStatsRecs = function(data, distancesObj) {
     // make boxplots
     // set the dimensions and margins of the graph
     let margin = {top: 10, right: 30, bottom: 30, left: 40},
@@ -39,16 +40,16 @@ const findStatsRecs = function(data, allDiffsArray) {
     // https://d3-graph-gallery.com/graph/boxplot_horizontal.html and migration:
     //https://observablehq.com/@d3/d3v6-migration-guide#group
     let diffsStatsArray = [];
-    for (let i = 0; i < allDiffsArray.length; i++) {
-        // **TODO: something with d.key instead of using allDiffsArray
-        let q1 = ss.quantile(ss.minSorted(Object.values(allDiffsArray[i])),.25)
-        let median = ss.quantile(ss.minSorted(Object.values(allDiffsArray[i])),.5)
-        let q3 = ss.quantile(ss.minSorted(Object.values(allDiffsArray[i])),.75)
+    for (let i = 0; i < distancesObj.length; i++) {
+        // **TODO: something with d.key instead of using distancesObj
+        let q1 = ss.quantile(ss.minSorted(Object.values(distancesObj[i])),.25)
+        let median = ss.quantile(ss.minSorted(Object.values(distancesObj[i])),.5)
+        let q3 = ss.quantile(ss.minSorted(Object.values(distancesObj[i])),.75)
         let interQuantileRange = q3 - q1
         let min = q1 - 1.5 * interQuantileRange
         let max = q3 + 1.5 * interQuantileRange
         let arrayTemp = [q1, median, q3, interQuantileRange, min, max];
-        let keyTemp = Object.keys(allDiffsArray[i])
+        let keyTemp = Object.keys(distancesObj[i])
         diffsStatsArray.push(arrayTemp)
     };
     console.log("diffsStatsArray ", diffsStatsArray);
@@ -150,9 +151,7 @@ const RunStatTestsOnTracks = function() {
     //const includedFeats = ["acousticness", "danceability", "energy", "valence"];
 
     // make data
-    let featuresData = []; // [ {"acousticness": }. {"danceability": }, {"energy": } {"valence": } ...]
-    //let fieldsArray = ["acousticness", "danceability", "energy", "valence"];
-    let allDiffsArray = [];
+    let distancesObj = {};
     let adArray = [], aeArray = [], avArray = [], deArray = [], dvArray = [], 
           evArray = [];
     features.audio_features.forEach((track) => {
@@ -172,15 +171,19 @@ const RunStatTestsOnTracks = function() {
         deArray.push(obj["de"]);
         dvArray.push(obj["dv"]);
         evArray.push(obj["ev"]);
+
+        distancesObj["ad"] = adArray;
+        distancesObj["ae"] = aeArray;
+        distancesObj["av"] = avArray;
+        distancesObj["de"] = deArray;
+        distancesObj["dv"] = dvArray;
+        distancesObj["ev"] = evArray;
         /*
         **TODO: modulate it?
         for (let field of fieldsArray) {
             obj[field] = track.${field};
         }*/
-        featuresData.push(obj);
     })
-    allDiffsArray.push({"ad": adArray}, {"ae": aeArray}, {"av": avArray}, 
-                        {"de": deArray}, {"dv": dvArray}, {"ev": evArray});
 
     /* to find if any tracks have similar differences, check if any mean difference
     // is significant (?). use hypothesized mean of 0. 
@@ -189,65 +192,71 @@ const RunStatTestsOnTracks = function() {
     all diffs at once will tell you if the diffs are dependent. 
     */
 
-    console.log(allDiffsArray)
-
     // -------- try single case 
-        
-
+    let correlationsObj = {}
+    correlationsObj["ad ae"] = ss.sampleCorrelation(distancesObj["ad"], distancesObj["ae"]).toFixed(4) 
+    
     // -------- determine significance
     // make array for csv 
-    let correlationRows = [];
-    let fields = ["ad", "ae", "av", "de", "dv", "ev"];
+    
+    let fieldNames = ["ad", "ae", "av", "de", "dv", "ev"];
+    /*
     // make csvContent without d3 for now (issue becoming difficult)
     //let csvContentTemp = [];
-    for (let i = 0; i < fields.length; i++) { // i < num of fields
+    for (let i = 0; i < fieldNames.length; i++) { // i < num of fields
         let row = [];
         let rowTempObj = {};
-        row.push(fields[i]); // field name
-        for (let j = 0; j < fields.length; j++) {
+        row.push(fieldNames[i]); // field name
+        for (let j = 0; j < fieldNames.length; j++) {
             if (i === j) {
                 row.push(1); // sampleCorrelation doesn't return exactly 1
                 //rowTempObj[fields[j]] = 1;
             } else {
-                console.log("i ", allDiffsArray[i])
-                console.log("j ", allDiffsArray[j])
-                row.push(ss.sampleCorrelation(allDiffsArray[i], allDiffsArray[j]));
-                //rowTempObj[correlationRows[0][j]] = ss.sampleCorrelation(allDiffsArray[i], allDiffsArray[j]);
+                row.push(ss.sampleCorrelation(distancesObj[i], distancesObj[j]));
+                //rowTempObj[correlationsObj[0][j]] = ss.sampleCorrelation(distancesObj[i], distancesObj[j]);
             }
         }
-        correlationRows.push(row);
-        //csvContentTemp.push(rowTempObj);
-    }
+        correlationsObj.push(row);
+        //csvContentTemp.push(rowTempObj); 
+    }*/
 
     // -------- send to redux after determining significance
+    // send min, max, target 
+    // rename bc confusing
+    let minTargetMaxObj = {}
+    let q1 = ss.quantile(distancesObj["ad"],.25);
+    let median = ss.quantile(distancesObj["ad"],.5);
+    let q3 = ss.quantile(distancesObj["ad"],.75);
+    minTargetMaxObj["ad"] = [q1, q3, median];
     const dispatch = useDispatch();
-    console.log(correlationRows)
-    dispatch(replaceStatTestResults(correlationRows))
+    dispatch(replaceStatTestResults(minTargetMaxObj));
+    dispatch(setStatsState(true));
 
     // --------- create correlelogram 
-    // insert "" at beginning, to correlationRows[0][0]
-    //correlationRows[0].splice(0, 0, "");
+    // insert "" at beginning, to correlationsObj[0][0]
+    //correlationsObj[0].splice(0, 0, "");
     //csvContentTemp.push(fields); // depends on splicing in previous line
 
-    // does not destructively modify correlationRows
-    let csvContent = correlationRows.map(row => row.join(",")).join("\n");
+    // does not destructively modify correlationsObj
+    let csvContent = correlationsObj.map(row => row.join(",")).join("\n");
 
     // source https://d3-graph-gallery.com/graph/correlogram_basic.html 
     //https://plnkr.co/edit/Va1Dw3hg2D5jPoNGKVWp?p=preview&preview
 
     // correlation matrix. =
     // Graph dimension
+    
     const margin = {top: 20, right: 20, bottom: 20, left: 20},
     width = 430 - margin.left - margin.right,
     height = 430 - margin.top - margin.bottom
 
     const data = [];
-    correlationRows.forEach(function(d) {
+    correlationsObj.forEach(function(d) {
         let x = d[0];
         //console.log(d[""]);
         //delete d[""];   
         for (let index = 1; index < d.length; index++) {
-            let y = fields[index-1],
+            let y = fieldNames[index-1],
                 value = d[index];
             data.push({
                 x: x,
@@ -374,7 +383,7 @@ const RunStatTestsOnTracks = function() {
 
     
     // making a boxplot... why.. 
-    //findStatsRecs(featuresData, allDiffsArray);
+    //findStatsRecs(featuresData, distancesObj);
 
     return (
         <>

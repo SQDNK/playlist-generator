@@ -2,7 +2,8 @@ import './App.css';
 import GetAuth from './GetAuth';
 //import RefineRecs from './RefineRecs';
 import ParseUserInput from './ParseUserInput'
-import DefaultBody from './-DefaultBody';
+import DefaultBody from './ReduxDependentLayout';
+import SendToServer from './SendToServer';
 
 function App() {
   return (

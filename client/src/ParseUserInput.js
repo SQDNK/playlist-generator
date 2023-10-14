@@ -78,7 +78,7 @@ const ParseUserInput = function() {
                 console.log(error.message);
             });
 
-        dispatch(setFeaturesState(true))
+        dispatch(setFeaturesState(true));
     };
 
     return (

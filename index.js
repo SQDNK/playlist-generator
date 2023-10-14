@@ -248,7 +248,7 @@ app.post('/get_features', upload.none(), async function(req, res) {
   res.json(dataF);*/
 });
 
-app.get('/get_recs', async function(req, res) {
+app.post('/get_recs', upload.none(), async function(req, res) {
   // **TODO: this was in the beginning of app.get /callback so placed it here too (?)
   /* what does it actually do? 
   let state = req.query.state || null;
@@ -275,9 +275,7 @@ app.get('/get_recs', async function(req, res) {
       },
       json: true 
   }; */
-  // features should not be null at this point
-  const features = useSelector((state) => state.features.value);
-
+  // features should not be null at this point  
   
   let featureMap = new Map([["danceability",0], 
     ["energy", 0], ["valence", 0]]); 
@@ -317,6 +315,15 @@ app.get('/get_recs', async function(req, res) {
   time_signature
   valence (musical positiveness) */
 
+  // todo: indexing is hard to read
+  let min = req.body.minTargetMaxObj["ad"][0];
+  let target = req.body.minTargetMaxObj["ad"][1];
+  let max = req.body.minTargetMaxObj["ad"][2];
+
+  console.log(min, target, max)
+
+  // important code, 
+  /*
   let urlR = `https://api.spotify.com/v1/recommendations?${paramsR.toString()}`;
   let fetchParamsObjR = {method: 'GET',
                           headers: {'Authorization': 'Bearer ' + req.cookies.token},
@@ -324,7 +331,7 @@ app.get('/get_recs', async function(req, res) {
   const dataR = await fetchAndCatchError(res, urlR, fetchParamsObjR);    
 
   // for frontend
-  res.json(dataR);
+  res.json(dataR);*/
 });
 
 app.post('/add_recs', async function(req, res) {
