@@ -6,13 +6,13 @@ export const featuresSlice = createSlice({
     value: null,
   },
   reducers: {
-    replace: (state, action) => {
+    replaceUserInput: (state, action) => {
       state.value = action.payload
     },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { replace } = featuresSlice.actions
+export const { replaceUserInput } = featuresSlice.actions
 
 export default featuresSlice.reducer

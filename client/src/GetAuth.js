@@ -26,11 +26,11 @@ const GetAuth = function() {
     return (
         <>
             <button onClick={fetchToken}
-                    className="bg-pink-200 hover:bg-pink-300 rounded-lg p-2">
+                    className="bg-npink hover:bg-pink-300 rounded-lg p-2">
                 get token without logging in
             </button>
             <button onClick={fetchDataFromExpress}
-                    className="bg-pink-200 hover:bg-pink-300 rounded-lg p-2">
+                    className="bg-npink hover:bg-pink-300 rounded-lg p-2">
                 Login
             </button>
             <div>

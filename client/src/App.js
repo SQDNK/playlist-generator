@@ -1,22 +1,20 @@
-import logo from './logo.svg';
 import './App.css';
 import GetAuth from './GetAuth';
-import RefineRecs from './RefineRecs';
-import GetFeaturesFromUserTracks from './GetFeaturesFromUserTracks';
-import DefaultBody from './DefaultBody';
+//import RefineRecs from './RefineRecs';
+import ParseUserInput from './ParseUserInput'
+import DefaultBody from './-DefaultBody';
 
 function App() {
   return (
-    <div className="bg-teal-200 dark:bg-slate-800 mx-12 font-sans">
+    <div className="bg-npurple dark:bg-slate-800 mx-12 font-sans">
       <header className="">
         Playlist Generator
       </header>
-      <header className="bg-teal-200">
+      <header className="bg-npurple">
         <GetAuth />
-        <GetFeaturesFromUserTracks />
-        <RefineRecs />
+        <ParseUserInput />
       </header>
-      <div className="bg-teal-100"> 
+      <div className="bg-npurple"> 
         <DefaultBody />
       </div>
     </div>

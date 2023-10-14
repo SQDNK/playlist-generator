@@ -2,6 +2,7 @@
  * Skeleton source: https://github.com/spotify/web-api-examples/blob/master/authentication/authorization_code/app.js
  * fetch (node-fetch): https://www.npmjs.com/package/node-fetch 
  */
+
 // mod.cjs; same as 'import fetch from 'node-fetch''
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 let express = require('express'); // Express web server framework
@@ -274,21 +275,24 @@ app.get('/get_recs', async function(req, res) {
       },
       json: true 
   }; */
+  // features should not be null at this point
+  const features = useSelector((state) => state.features.value);
+
   
   let featureMap = new Map([["danceability",0], 
     ["energy", 0], ["valence", 0]]); 
-  const numOfTracks = dataF.audio_features.length;
-  for (const track of dataF.audio_features) {
-    for (const [key, value] of featureMap) {
+  const numOfTracks = features.length;
+
+  for (const track of features) {
       // to find best recs, average the params (is this the best way?)
       // dynamically update avg by doing (avg * length + newElem) / length
       featureMap.set(key, (value*numOfTracks + track[key]) / numOfTracks  );
-    }
   }
 
   // call spotify web api to get recs
   let paramsR = new URLSearchParams();
   paramsR.append("limit", 50);
+  // must have seed tracks, genre, or artists. maybe most vague seed is genre. 
   paramsR.append("seed_tracks", seedTracksString);
   for (const [key, value] of featureMap) {
     paramsR.append("target_"+key, value);
@@ -311,20 +315,7 @@ app.get('/get_recs', async function(req, res) {
   speechiness (excluded if only finding recs for tracks)
   tempo
   time_signature
-  valence (musical positiveness) 
-  /*
-  let seedArtists = document.getElementById("seed-artists").value; 
-  let seedGenres = document.getElementById("seed-genres").value;
-  let seedTracks = document.getElementById("seed-tracks").value;
-  if (seedArtists != "") {
-      paramsR.append("seed_artists", seedArtists);
-  }
-  if (seedGenres != "") {
-      paramsR.append("seed_genres", seedGenres);
-  }
-  if (seedTracks != "") {
-      paramsR.append("seed_tracks", seedTracks);
-  }*/
+  valence (musical positiveness) */
 
   let urlR = `https://api.spotify.com/v1/recommendations?${paramsR.toString()}`;
   let fetchParamsObjR = {method: 'GET',

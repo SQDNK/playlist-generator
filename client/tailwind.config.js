@@ -21,6 +21,9 @@ module.exports = {
         serif: ['Merriweather', 'serif'],
       },
       colors: {
+        'npurple': '#D3c4be',
+        'npink': '#ebcfc4',
+        'nlime': '#e8e8d9',
         lime: colors.lime,
         slate: colors.slate,
         emerald: colors.emerald,
