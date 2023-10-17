@@ -4,17 +4,19 @@ import RunStatTestsOnTracks from './RunStatTestsOnTracks';
 import DisplayRecs from './-DisplayRecs';
 import SendToServer from './SendToServer';
 
-const DefaultBody = function() {
+const ReduxDependentLayout = function() {
     const showFeatures = useSelector((state) => state.globalStates.featuresValue);
     const showStatTests = useSelector((state) => (state.globalStates.statsValue));
 
+    //showFeatures ? <RunStatTestsOnTracks /> : null
+
     return (
         <>
-            {showFeatures ? <RunStatTestsOnTracks /> : null}
             {showStatTests ? <SendToServer /> : null}
             <DisplayRecs />
+            
         </>
     );
 }
 
-export default DefaultBody
+export default ReduxDependentLayout;

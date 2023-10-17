@@ -2,12 +2,10 @@ import { createSlice } from '@reduxjs/toolkit'
 
 export const statTestsResultsSlice = createSlice({
   name: 'statTestsResults',
-  initialState: {
-    value: null,
-  },
+  initialState: {},
   reducers: {
     replaceStatTestResults: (state, action) => {
-      state.value = action.payload
+      state.push(action.payload)
     },
   },
 })

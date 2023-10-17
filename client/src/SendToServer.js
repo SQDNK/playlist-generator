@@ -2,7 +2,8 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-const SendToServer = async function() {
+// react note: cannot put async function as react child 
+const SendToServer = function() {
     //const showStatTests = useSelector((state) => (state.globalStates.statsValue));
     const statTestsResults = useSelector((state) => state.statTestsResults.value)
 
@@ -30,7 +31,7 @@ const SendToServer = async function() {
 
     return (
         <div className="">
-            <button onClick={handleRequest}>
+            <button className = "bg-nlime hover:bg-nlime rounded-lg p-2" onClick={handleRequest}>
                 click after running stat tests
             </button>
         </div>

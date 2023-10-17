@@ -8,11 +8,154 @@ import { setStatsState } from './redux/globalStatesSlice';
 const ss = require('simple-statistics');
 const d3 = require('d3');
 
-const makeCorrelogram = function(...args) {
-    for (const array in args) {
+const makeCorrelogram = function(correlationsObj, fieldNames) {
+        // --------- create correlelogram 
+    // insert "" at beginning, to correlationsObj[0][0]
+    //correlationsObj[0].splice(0, 0, "");
+    //csvContentTemp.push(fields); // depends on splicing in previous line
 
-    }
+    // does not destructively modify correlationsObj
+    let csvContent = correlationsObj.map(row => row.join(",")).join("\n");
+
+    // source https://d3-graph-gallery.com/graph/correlogram_basic.html 
+    //https://plnkr.co/edit/Va1Dw3hg2D5jPoNGKVWp?p=preview&preview
+
+    // correlation matrix. =
+    // Graph dimension
     
+    const margin = {top: 20, right: 20, bottom: 20, left: 20},
+    width = 430 - margin.left - margin.right,
+    height = 430 - margin.top - margin.bottom
+
+    const data = [];
+    correlationsObj.forEach(function(d) {
+        let x = d[0];
+        //console.log(d[""]);
+        //delete d[""];   
+        for (let index = 1; index < d.length; index++) {
+            let y = fieldNames[index-1],
+                value = d[index];
+            data.push({
+                x: x,
+                y: y,
+                value: +value // convert value to number, default is string 
+            });
+        }
+    });
+
+    // Create the svg area
+    // remove any initial data
+    d3.select("#correlogram svg").remove()
+
+    const svg = d3.select("#correlogram")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // List of all variables and number of them
+    const domain = Array.from(new Set(data.map(function(d) { return d.x })))
+    const num = Math.sqrt(data.length)
+
+    // Create a color scale
+    const color = d3.scaleLinear()
+        .domain([-1, 0, 1])
+        .range(["#B22222", "#fff", "#000080"]);
+
+    // Create a size scale for bubbles on top right. Watch out: must be a rootscale!
+    const size = d3.scaleSqrt()
+        .domain([0, 1])
+        .range([0, 9]);
+
+    // X scale
+    const x = d3.scalePoint()
+        .range([0, width])
+        .domain(domain)
+
+    // Y scale
+    const y = d3.scalePoint()
+        .range([0, height])
+        .domain(domain)
+
+    // Create one 'g' element for each cell of the correlogram
+    const cor = svg.selectAll(".cor")
+        .data(data)
+        .join("g")
+        .attr("class", "cor")
+        .attr("transform", function(d) {
+            return `translate(${x(d.x)}, ${y(d.y)})`
+        });
+
+    // Low left part + Diagonal: Add the text with specific color
+    cor
+        .filter(function(d){
+        const ypos = domain.indexOf(d.y);
+        const xpos = domain.indexOf(d.x);
+        return xpos <= ypos;
+        })
+        .append("text")
+        .attr("y", 5)
+        .text(function(d) {
+            if (d.x === d.y) {
+            return d.x;
+            } else {
+            return d.value.toFixed(2);
+            }
+        })
+        .style("font-size", 11)
+        .style("text-align", "center")
+        .style("fill", function(d){
+            if (d.x === d.y) {
+            return "#000";
+            } else {
+            return color(d.value);
+            }
+        });
+
+
+    // Up right part: add circles
+    cor
+        .filter(function(d){
+        const ypos = domain.indexOf(d.y);
+        const xpos = domain.indexOf(d.x);
+        return xpos > ypos;
+        })
+        .append("circle")
+        .attr("r", function(d){ return size(Math.abs(d.value)) })
+        .style("fill", function(d){
+            if (d.x === d.y) {
+            return "#000";
+            } else {
+            return color(d.value);
+            }
+        })
+        .style("opacity", 0.8)
+
+    let aS = d3.scaleLinear()
+      .range([-margin.top + 5, height + margin.bottom - 5])
+      .domain([1, -1]);
+
+    let yA = d3.axisRight(aS)
+      .tickPadding(7);
+
+    let aG = svg.append("g")
+      .attr("class", "y axis")
+      .call(yA)
+      .attr("transform", "translate(" + (width + margin.right / 2) + " ,0)")
+
+    let iR = d3.range(-1, 1.01, 0.01);
+    let h = height / iR.length + 3;
+    iR.forEach(function(d){
+        aG.append('rect')
+          .style('fill',color(d))
+          .style('stroke-width', 0)
+          .style('stoke', 'none')
+          .attr('height', h)
+          .attr('width', 10)
+          .attr('x', 0)
+          .attr('y', aS(d))
+    });
 };
 
 // input: data = [{"acousticness": }, ..., {"ad": }, ...]
@@ -232,159 +375,12 @@ const RunStatTestsOnTracks = function() {
     dispatch(replaceStatTestResults(minTargetMaxObj));
     dispatch(setStatsState(true));
 
-    // --------- create correlelogram 
-    // insert "" at beginning, to correlationsObj[0][0]
-    //correlationsObj[0].splice(0, 0, "");
-    //csvContentTemp.push(fields); // depends on splicing in previous line
-
-    // does not destructively modify correlationsObj
-    let csvContent = correlationsObj.map(row => row.join(",")).join("\n");
-
-    // source https://d3-graph-gallery.com/graph/correlogram_basic.html 
-    //https://plnkr.co/edit/Va1Dw3hg2D5jPoNGKVWp?p=preview&preview
-
-    // correlation matrix. =
-    // Graph dimension
-    
-    const margin = {top: 20, right: 20, bottom: 20, left: 20},
-    width = 430 - margin.left - margin.right,
-    height = 430 - margin.top - margin.bottom
-
-    const data = [];
-    correlationsObj.forEach(function(d) {
-        let x = d[0];
-        //console.log(d[""]);
-        //delete d[""];   
-        for (let index = 1; index < d.length; index++) {
-            let y = fieldNames[index-1],
-                value = d[index];
-            data.push({
-                x: x,
-                y: y,
-                value: +value // convert value to number, default is string 
-            });
-        }
-    });
-
-    // Create the svg area
-    // remove any initial data
-    d3.select("#correlogram svg").remove()
-
-    const svg = d3.select("#correlogram")
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
-
-            // List of all variables and number of them
-    const domain = Array.from(new Set(data.map(function(d) { return d.x })))
-    const num = Math.sqrt(data.length)
-
-    // Create a color scale
-    const color = d3.scaleLinear()
-        .domain([-1, 0, 1])
-        .range(["#B22222", "#fff", "#000080"]);
-
-    // Create a size scale for bubbles on top right. Watch out: must be a rootscale!
-    const size = d3.scaleSqrt()
-        .domain([0, 1])
-        .range([0, 9]);
-
-    // X scale
-    const x = d3.scalePoint()
-        .range([0, width])
-        .domain(domain)
-
-    // Y scale
-    const y = d3.scalePoint()
-        .range([0, height])
-        .domain(domain)
-
-    // Create one 'g' element for each cell of the correlogram
-    const cor = svg.selectAll(".cor")
-        .data(data)
-        .join("g")
-        .attr("class", "cor")
-        .attr("transform", function(d) {
-            return `translate(${x(d.x)}, ${y(d.y)})`
-        });
-
-    // Low left part + Diagonal: Add the text with specific color
-    cor
-        .filter(function(d){
-        const ypos = domain.indexOf(d.y);
-        const xpos = domain.indexOf(d.x);
-        return xpos <= ypos;
-        })
-        .append("text")
-        .attr("y", 5)
-        .text(function(d) {
-            if (d.x === d.y) {
-            return d.x;
-            } else {
-            return d.value.toFixed(2);
-            }
-        })
-        .style("font-size", 11)
-        .style("text-align", "center")
-        .style("fill", function(d){
-            if (d.x === d.y) {
-            return "#000";
-            } else {
-            return color(d.value);
-            }
-        });
-
-
-    // Up right part: add circles
-    cor
-        .filter(function(d){
-        const ypos = domain.indexOf(d.y);
-        const xpos = domain.indexOf(d.x);
-        return xpos > ypos;
-        })
-        .append("circle")
-        .attr("r", function(d){ return size(Math.abs(d.value)) })
-        .style("fill", function(d){
-            if (d.x === d.y) {
-            return "#000";
-            } else {
-            return color(d.value);
-            }
-        })
-        .style("opacity", 0.8)
-
-    let aS = d3.scaleLinear()
-      .range([-margin.top + 5, height + margin.bottom - 5])
-      .domain([1, -1]);
-
-    let yA = d3.axisRight(aS)
-      .tickPadding(7);
-
-    let aG = svg.append("g")
-      .attr("class", "y axis")
-      .call(yA)
-      .attr("transform", "translate(" + (width + margin.right / 2) + " ,0)")
-
-    let iR = d3.range(-1, 1.01, 0.01);
-    let h = height / iR.length + 3;
-    iR.forEach(function(d){
-        aG.append('rect')
-          .style('fill',color(d))
-          .style('stroke-width', 0)
-          .style('stoke', 'none')
-          .attr('height', h)
-          .attr('width', 10)
-          .attr('x', 0)
-          .attr('y', aS(d))
-    });
-
-
+    //makeCorrelogram();
     
     // making a boxplot... why.. 
     //findStatsRecs(featuresData, distancesObj);
 
+    /*
     return (
         <>
             <div id="correlogram" className="bg-pink-500">
@@ -392,7 +388,7 @@ const RunStatTestsOnTracks = function() {
             <div id="boxplots" className="bg-pink-500">
             </div>
         </>
-    );
+    );*/
 };
 
 export default RunStatTestsOnTracks;
