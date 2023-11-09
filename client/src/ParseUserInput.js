@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { replace, replaceUserInput } from './redux/featuresSlice';
 import AnalyzeFeatures from './RunStatTestsOnTracks';
 import { setFeaturesState } from './redux/globalStatesSlice';
+import RunStatTestsOnTracks from './RunStatTestsOnTracks';
 // **TODO: good design to import analyze features? or stick it here? 
 
 // [NOTE] sends data to be statistically analyzed . 
@@ -63,7 +64,7 @@ const ParseUserInput = function() {
                 });
         }
 
-        // places in redux to analyze features 
+        // places in redux store to analyze features 
         await fetch("/get_features", { 
             method: form.method, 
             body: formData})

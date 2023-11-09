@@ -1,11 +1,14 @@
+import DisplayRecs from './-DisplayRecs';
 import './App.css';
 import GetAuth from './GetAuth';
 //import RefineRecs from './RefineRecs';
 import ParseUserInput from './ParseUserInput'
-import DefaultBody from './ReduxDependentLayout';
 import SendToServer from './SendToServer';
+import { useSelector } from 'react-redux';
 
 function App() {
+  const showFeatures = useSelector((state) => state.globalStates.featuresValue);
+
   return (
     <div className="bg-npurple dark:bg-slate-800 mx-12 font-sans">
       <header className="">
@@ -16,7 +19,8 @@ function App() {
         <ParseUserInput />
       </header>
       <div className="bg-npurple"> 
-        <DefaultBody />
+        {showFeatures ? <SendToServer /> : null}
+        <DisplayRecs />
       </div>
     </div>
   );

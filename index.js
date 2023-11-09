@@ -248,53 +248,6 @@ app.post('/get_features', upload.none(), async function(req, res) {
   res.json(dataF);*/
 });
 
-app.post('/get_recs', upload.none(), async function(req, res) {
-  // **TODO: this was in the beginning of app.get /callback so placed it here too (?)
-  /* what does it actually do? 
-  let state = req.query.state || null;
-  let storedState = req.cookies ? req.cookies[stateKey] : null;
-
-  if (state === null || state !== storedState) {
-    res.redirect('/#' +
-      querystring.stringify({
-        error: 'state_mismatch'
-      }));
-  } else {
-    res.clearCookie(stateKey); 
-    // **TODO: why put authoptions here? 
-    /*
-    let authOptions = {
-      url: 'https://accounts.spotify.com/api/token',
-      form: {
-        code: code,
-        redirect_uri: redirect_uri,
-        grant_type: 'authorization_code'
-      },
-      headers: {
-        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-      },
-      json: true 
-  }; */
-  // features should not be null at this point  
-  
-  let featureMap = new Map([["danceability",0], 
-    ["energy", 0], ["valence", 0]]); 
-  const numOfTracks = features.length;
-
-  for (const track of features) {
-      // to find best recs, average the params (is this the best way?)
-      // dynamically update avg by doing (avg * length + newElem) / length
-      featureMap.set(key, (value*numOfTracks + track[key]) / numOfTracks  );
-  }
-
-  // call spotify web api to get recs
-  let paramsR = new URLSearchParams();
-  paramsR.append("limit", 50);
-  // must have seed tracks, genre, or artists. maybe most vague seed is genre. 
-  paramsR.append("seed_tracks", seedTracksString);
-  for (const [key, value] of featureMap) {
-    paramsR.append("target_"+key, value);
-  }
 
   // **TODO: what if there are no seeds and only params for fine tuning?
   // **TODO: fine tuning will repeat tracks
@@ -314,24 +267,25 @@ app.post('/get_recs', upload.none(), async function(req, res) {
   tempo
   time_signature
   valence (musical positiveness) */
+app.post('/get_recs', async function(req, res) {
+  
+  let paramsR = new URLSearchParams();
 
-  // todo: indexing is hard to read
-  let min = req.body.minTargetMaxObj["ad"][0];
-  let target = req.body.minTargetMaxObj["ad"][1];
-  let max = req.body.minTargetMaxObj["ad"][2];
+  for (stat in req.body) {
+    paramsR.append(`min_${stat}`, req.body[stat][0]);
+    paramsR.append(`max_${stat}`, req.body[stat][1]);
+    paramsR.append(`target_${stat}`, req.body[stat][2]);
+  };
 
-  console.log(min, target, max)
-
-  // important code, 
-  /*
   let urlR = `https://api.spotify.com/v1/recommendations?${paramsR.toString()}`;
   let fetchParamsObjR = {method: 'GET',
-                          headers: {'Authorization': 'Bearer ' + req.cookies.token},
+                          headers: {'Authorization': 'Bearer ' + req.cookies.token,
+                                    'Content-Type': 'application/json'},
                           json: true};
   const dataR = await fetchAndCatchError(res, urlR, fetchParamsObjR);    
 
   // for frontend
-  res.json(dataR);*/
+  res.json(dataR);
 });
 
 app.post('/add_recs', async function(req, res) {
@@ -340,8 +294,7 @@ app.post('/add_recs', async function(req, res) {
   //**TODO do something about repeated tracks 
   let urlA = `https://api.spotify.com/v1/playlists/${req.body.playlistId}/tracks`;
   let fetchParamsObjA = {method: 'POST',
-                          headers: {'Authorization': 'Bearer ' + req.cookies.token, 
-                                    'Content-Type': 'application/json'},
+                          headers: {'Authorization': 'Bearer ' + req.cookies.token},
                           body: JSON.stringify({"uris": req.body.uriArray, 
                                                 "position": req.body.posValue}),
                           json: true};

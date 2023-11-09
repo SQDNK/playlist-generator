@@ -281,7 +281,7 @@ const findStatsRecs = function(data, distancesObj) {
     .attr("stroke", "black")*/
 };
 
-const RunStatTestsOnTracks = function() {
+const RunStatTestsOnTracks = async function() {
 
     const features = useSelector((state) => state.features.value);
 
@@ -366,13 +366,14 @@ const RunStatTestsOnTracks = function() {
     // -------- send to redux after determining significance
     // send min, max, target 
     // rename bc confusing
-    let minTargetMaxObj = {}
+    let minTargetMaxObj = {};
     let q1 = ss.quantile(distancesObj["ad"],.25);
     let median = ss.quantile(distancesObj["ad"],.5);
     let q3 = ss.quantile(distancesObj["ad"],.75);
     minTargetMaxObj["ad"] = [q1, q3, median];
     const dispatch = useDispatch();
     dispatch(replaceStatTestResults(minTargetMaxObj));
+    //console.log("replaced? ", useSelector((state) => state.statTestsResults.value));
     dispatch(setStatsState(true));
 
     //makeCorrelogram();
